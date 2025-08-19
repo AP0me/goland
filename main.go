@@ -47,13 +47,24 @@ func main() {
 	w := a.NewWindow(w_title)
 	log.Println(w_width, w_height)
 	w.Resize(fyne.NewSize(float32(w_width), float32(w_height)))
+	
 
-	hello := widget.NewLabel("Hello Fyne!")
+	query, args, err = psql.Select("title").From("label").ToSql()
+	E(err)
+	rows, err = db.Query(query, args...)
+	E(err)
+	defer rows.Close()
+
+	w_content := []fyne.CanvasObject{};
+	for rows.Next() {
+		var l_title string = "No Title"
+		err = rows.Scan(&l_title)
+		E(err)
+		w_content = append(w_content, widget.NewLabel(l_title))
+	}
+
 	w.SetContent(container.NewVBox(
-		hello,
-		widget.NewButton("Hi!", func() {
-			hello.SetText("Welcome :)")
-		}),
+		w_content...
 	))
 
 	w.ShowAndRun()
