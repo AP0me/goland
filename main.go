@@ -45,9 +45,8 @@ func main() {
 
 	a := app.New()
 	w := a.NewWindow(w_title)
-	log.Println(w_width, w_height)
 	w.Resize(fyne.NewSize(float32(w_width), float32(w_height)))
-	
+
 
 	query, args, err = psql.Select("title").From("label").ToSql()
 	E(err)
