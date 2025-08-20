@@ -34,19 +34,37 @@ func database_connection() (sq.StatementBuilderType, *sql.DB) {
 	return psql, db
 }
 
-func insertCanvasObjectOfType(psql sq.StatementBuilderType, db *sql.DB, w_content *[]fyne.CanvasObject, window_id int) {
-	query, args, err := psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
-	E(err)
-	rows, err := db.Query(query, args...)
-	E(err)
-	defer rows.Close()
-
-	for rows.Next() {
-		l_title := "No Title"
-		widget_order := 0
-		err = rows.Scan(&l_title, &widget_order)
+func insertCanvasObjectOfType(psql sq.StatementBuilderType, db *sql.DB, w_content *[]fyne.CanvasObject, window_id int, w_type string) {
+	switch w_type {
+	case "label":
+		query, args, err := psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
 		E(err)
-		*w_content = insertCanvasObject(*w_content, widget_order, widget.NewLabel(l_title))
+		rows, err := db.Query(query, args...)
+		E(err)
+		defer rows.Close()
+
+		for rows.Next() {
+			l_title := "No Title"
+			widget_order := 0
+			err = rows.Scan(&l_title, &widget_order)
+			E(err)
+			*w_content = insertCanvasObject(*w_content, widget_order, widget.NewLabel(l_title))
+		}
+	case "botton":
+		// TODO:
+		query, args, err := psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
+		E(err)
+		rows, err := db.Query(query, args...)
+		E(err)
+		defer rows.Close()
+
+		for rows.Next() {
+			l_title := "No Title"
+			widget_order := 0
+			err = rows.Scan(&l_title, &widget_order)
+			E(err)
+			*w_content = insertCanvasObject(*w_content, widget_order, widget.NewLabel(l_title))
+		}
 	}
 }
 
@@ -74,7 +92,7 @@ func main() {
 	w.Resize(fyne.NewSize(float32(w_width), float32(w_height)))
 
 	w_content := []fyne.CanvasObject{}
-	insertCanvasObjectOfType(psql, db, &w_content, window_id)
+	insertCanvasObjectOfType(psql, db, &w_content, window_id, "label")
 
 	w.SetContent(container.NewVBox(
 		w_content...,
