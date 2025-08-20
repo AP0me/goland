@@ -18,11 +18,36 @@ func E(err error) {
 	}
 }
 
+func insertCanvasObject(arr []fyne.CanvasObject, index int, value fyne.CanvasObject) []fyne.CanvasObject {
+	if len(arr) == index {
+		return append(arr, value)
+	}
+	arr = append(arr[:index+1], arr[index:]...)
+	arr[index] = value
+	return arr
+}
+
 func database_connection() (sq.StatementBuilderType, *sql.DB) {
 	db, err := sql.Open("sqlite3", "./gui.db")
 	E(err)
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Question)
 	return psql, db
+}
+
+func insertCanvasObjectOfType(psql sq.StatementBuilderType, db *sql.DB, w_content *[]fyne.CanvasObject, window_id int) {
+	query, args, err := psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
+	E(err)
+	rows, err := db.Query(query, args...)
+	E(err)
+	defer rows.Close()
+
+	for rows.Next() {
+		l_title := "No Title"
+		widget_order := 0
+		err = rows.Scan(&l_title, &widget_order)
+		E(err)
+		*w_content = insertCanvasObject(*w_content, widget_order, widget.NewLabel(l_title))
+	}
 }
 
 func main() {
@@ -48,20 +73,8 @@ func main() {
 	w := a.NewWindow(w_title)
 	w.Resize(fyne.NewSize(float32(w_width), float32(w_height)))
 
-	query, args, err = psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
-	E(err)
-	rows, err = db.Query(query, args...)
-	E(err)
-	defer rows.Close()
-
 	w_content := []fyne.CanvasObject{}
-	for rows.Next() {
-		var l_title string = "No Title"
-		var widget_order int = 0
-		err = rows.Scan(&l_title, &widget_order)
-		E(err)
-		w_content = append(w_content, widget.NewLabel(l_title))
-	}
+	insertCanvasObjectOfType(psql, db, &w_content, window_id)
 
 	w.SetContent(container.NewVBox(
 		w_content...,
