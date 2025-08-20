@@ -48,7 +48,7 @@ func main() {
 	w := a.NewWindow(w_title)
 	w.Resize(fyne.NewSize(float32(w_width), float32(w_height)))
 
-	query, args, err = psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order").ToSql()
+	query, args, err = psql.Select("L.title", "W.widget_order").From("widget AS W").Join("label AS L ON W.widget_id = L.widget_id").Where(sq.Eq{"W.window_id": window_id}).OrderBy("W.widget_order ASC").ToSql()
 	E(err)
 	rows, err = db.Query(query, args...)
 	E(err)
